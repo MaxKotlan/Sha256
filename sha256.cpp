@@ -1,13 +1,22 @@
 #include "sha256.h"
+#include <iostream>
+#include <cstdint>
+#include <cstring>
+
+void Print(std::vector<uint8_t>& input){
+    for (auto e : input)
+        std::cout << std::hex << e << " ";
+    std::cout << std::endl;
+}
 
 void Pad(std::vector<uint8_t>& input){
-    uint64_t length = input.length()*8;
+    uint64_t length = input.size()*8;
     uint8_t lengthbytearray[8];
     std::memcpy(&lengthbytearray, &length, sizeof(uint64_t));
 
-    if(input.length() < 56)
+    if(input.size() < 56)
         input.push_back(0x10000000);
-    while (input.length() < 56)
+    while (input.size() < 56)
         input.push_back(0);
     for (int i = 0; i < sizeof(uint64_t); i++)
         input.push_back(lengthbytearray[i]);
@@ -16,8 +25,10 @@ void Pad(std::vector<uint8_t>& input){
 Hash Sha256(std::vector<uint8_t> input){
     /*h[n]:= the first 32 bits of the fractional part of the nth prime number*/
     /*  eg: h[0] = sqrt(2)-2*/
-    
-    void Pad(input); 
+
+    Print(input);
+    Pad(input); 
+    Print(input);
 
     uint32_t h[8] = {
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
@@ -25,7 +36,7 @@ Hash Sha256(std::vector<uint8_t> input){
     };
 
     /*32 bit of fractional part of the cubic root of the first 64 prime numbers*/
-    uint32_t d[32] = {
+    uint32_t d[64] = {
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
         0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
         0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -42,5 +53,8 @@ Hash Sha256(std::vector<uint8_t> input){
         0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-    }
+    };
+
+    Hash m(input);
+    return m; 
 }
