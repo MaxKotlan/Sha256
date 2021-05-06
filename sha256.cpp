@@ -3,6 +3,26 @@
 #include <cstdint>
 #include <cstring>
 #include <algorithm>
+#include <climits>
+
+template <typename T>
+T swap_endian(T u)
+{
+    static_assert (CHAR_BIT == 8, "CHAR_BIT != 8");
+
+    union
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
+
+    source.u = u;
+
+    for (size_t k = 0; k < sizeof(T); k++)
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+
+    return dest.u;
+}
 
 typedef std::vector<uint8_t> MessageBlock;
 
@@ -18,20 +38,10 @@ void copyFullMessageBlock(MessageBlock& m, std::vector<uint8_t> &input, uint64_t
     std::copy(input.begin(), input.end(), m.begin());
 }
 
-void ChangeMemEndianness(uint64_t* mem, size_t size)
-{
-    uint64_t m1 = 0xFF00FF00FF00FF00ULL, m2 = m1 >> CHAR_BIT;
-
-    size = (size + (sizeof(uint64_t) - 1)) / sizeof(uint64_t);
-    for (; size; size--, mem++)
-        *mem = ((*mem & m1) >> CHAR_BIT) | ((*mem & m2) << CHAR_BIT);
-}
-
 void copyPartialMessageBlock(MessageBlock& m, std::vector<uint8_t>& input) {
     std::copy(input.begin(), input.end(), m.begin());
     const uint64_t one = 0b10000000;
-    uint64_t message_size = input.size();
-    ChangeMemEndianness(&message_size, sizeof(uint64_t));
+    uint64_t message_size = swap_endian(input.size());
     std::memcpy(m.data() + input.size() % messageBlockByteSize, &one, 1);
     std::memcpy(m.data() + messageBlockByteSize-sizeof(uint64_t), &message_size, sizeof(uint64_t));
 }
